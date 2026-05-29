@@ -34,6 +34,7 @@ const HAND_CONNECTIONS = [
 const state = {
   detector: null,
   detectorBusy: false,
+  firstResultSeen: false,
   three: null,
   running: false,
   lastVideoTime: -1,
@@ -57,6 +58,7 @@ const THREE_SOURCES = [
 
 const MODULE_IMPORT_TIMEOUT = 90000;
 const HANDS_SEND_TIMEOUT = 20000;
+const FIRST_HANDS_SEND_TIMEOUT = 120000;
 const DETECT_INTERVAL_MS = 90;
 
 button.addEventListener("click", start);
@@ -145,6 +147,7 @@ async function setupHandDetector() {
     });
     hands.onResults((result) => {
       const landmarksList = result?.multiHandLandmarks || [];
+      state.firstResultSeen = true;
       state.resultFrames += 1;
       state.resultCount = landmarksList.length;
       state.hand = pickLeftHand(result);
@@ -268,7 +271,7 @@ function loop(now) {
     state.detectorBusy = true;
     withTimeout(
       state.detector.send({ image: video }),
-      HANDS_SEND_TIMEOUT,
+      state.firstResultSeen ? HANDS_SEND_TIMEOUT : FIRST_HANDS_SEND_TIMEOUT,
       "单帧识别超时"
     ).catch((error) => {
       console.warn("MediaPipe Hands frame failed", error);
@@ -372,7 +375,7 @@ function draw(now) {
   if (!state.hand) {
     setThreeVisible(false);
     setStatus(state.modelReady
-      ? `识别运行中，暂未检测到手（结果：${state.resultCount}，发送/回调：${state.sentFrames}/${state.resultFrames}）`
+      ? `识别运行中，暂未检测到手（结果：${state.resultCount}，发送/回调：${state.sentFrames}/${state.resultFrames}，首次初始化请稍等）`
       : "正在加载识别模型", false);
     drawGuide(width, height, now);
     renderThree();

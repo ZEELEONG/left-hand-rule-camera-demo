@@ -3,13 +3,16 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>左手定律摄像头演示 v2.7</title>
-    <link rel="modulepreload" href="./app-v2.7.js?v=2.7" />
+    <title>左手定律摄像头演示 v2.8</title>
+    <link rel="modulepreload" href="./app-v2.8.js?v=2.8" />
     <link rel="modulepreload" href="./vendor/three/three.module.js" />
     <link rel="preload" href="./vendor/hands/hands.js" as="script" />
     <link rel="preload" href="./vendor/hands/hands.binarypb" as="fetch" crossorigin />
     <link rel="preload" href="./vendor/hands/hands_solution_packed_assets.data" as="fetch" crossorigin />
+    <link rel="preload" href="./vendor/hands/hands_solution_wasm_bin.js" as="script" />
     <link rel="preload" href="./vendor/hands/hands_solution_wasm_bin.wasm" as="fetch" type="application/wasm" crossorigin />
+    <link rel="preload" href="./vendor/hands/hands_solution_simd_wasm_bin.js" as="script" />
+    <link rel="preload" href="./vendor/hands/hands_solution_simd_wasm_bin.wasm" as="fetch" type="application/wasm" crossorigin />
     <link rel="preload" href="./vendor/hands/hand_landmark_lite.tflite" as="fetch" crossorigin />
     <link rel="stylesheet" href="./styles.css" />
   </head>
@@ -21,7 +24,7 @@
 
         <div class="topbar">
           <div>
-            <p class="kicker">Physics Camera Lab · v2.7</p>
+            <p class="kicker">Physics Camera Lab · v2.8</p>
             <h1>左手定律实时演示</h1>
           </div>
           <div class="controls">
@@ -63,6 +66,6 @@
       </section>
     </main>
 
-    <script type="module" src="./app-v2.7.js?v=2.7"></script>
+    <script type="module" src="./app-v2.8.js?v=2.8"></script>
   </body>
 </html>
