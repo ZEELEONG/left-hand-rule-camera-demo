@@ -52,7 +52,7 @@ const THREE_SOURCES = [
 ];
 
 const MODULE_IMPORT_TIMEOUT = 90000;
-const HANDS_INIT_TIMEOUT = 90000;
+const HANDS_SEND_TIMEOUT = 20000;
 
 button.addEventListener("click", start);
 mirrorButton.addEventListener("click", toggleMirror);
@@ -106,8 +106,8 @@ async function setupCamera() {
   const stream = await navigator.mediaDevices.getUserMedia({
     video: {
       facingMode: "user",
-      width: { ideal: 1280 },
-      height: { ideal: 720 },
+      width: { ideal: 640 },
+      height: { ideal: 480 },
     },
     audio: false,
   });
@@ -144,7 +144,6 @@ async function setupHandDetector() {
       state.detectorBusy = false;
     });
 
-    await withTimeout(hands.initialize(), HANDS_INIT_TIMEOUT, "MediaPipe Hands 初始化超时");
     state.detector = hands;
     state.modelReady = true;
   } catch (error) {
@@ -257,8 +256,13 @@ function loop(now) {
   if (video.currentTime !== state.lastVideoTime && state.detector && !state.detectorBusy) {
     state.lastVideoTime = video.currentTime;
     state.detectorBusy = true;
-    state.detector.send({ image: video }).catch((error) => {
+    withTimeout(
+      state.detector.send({ image: video }),
+      HANDS_SEND_TIMEOUT,
+      "单帧识别超时"
+    ).catch((error) => {
       console.warn("MediaPipe Hands frame failed", error);
+    }).finally(() => {
       state.detectorBusy = false;
     });
   }
