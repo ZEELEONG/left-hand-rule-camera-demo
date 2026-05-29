@@ -1,0 +1,61 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>左手定律摄像头演示 v2.1</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="stage">
+      <section class="camera-shell" aria-label="摄像头左手定律演示">
+        <video id="camera" playsinline muted></video>
+        <canvas id="overlay"></canvas>
+
+        <div class="topbar">
+          <div>
+            <p class="kicker">Physics Camera Lab · v2.1</p>
+            <h1>左手定律实时演示</h1>
+          </div>
+          <div class="controls">
+            <button id="mirrorButton" class="secondary-button" type="button" aria-pressed="false">
+              <span class="button-icon">↔</span>
+              <span>当前：原始</span>
+            </button>
+            <button id="cameraButton" type="button">
+              <span class="button-icon">▶</span>
+              <span>打开摄像头</span>
+            </button>
+          </div>
+        </div>
+
+        <aside class="status-panel">
+          <div class="status-row">
+            <span class="dot" id="trackingDot"></span>
+            <span id="statusText">等待摄像头权限</span>
+          </div>
+          <div class="readout">
+            <span>四指</span>
+            <strong>电流 I</strong>
+          </div>
+          <div class="readout">
+            <span>穿入掌心</span>
+            <strong>磁场 B</strong>
+          </div>
+          <div class="readout">
+            <span>拇指</span>
+            <strong>安培力 F</strong>
+          </div>
+        </aside>
+
+        <div class="legend">
+          <span><i class="force"></i>安培力 F</span>
+          <span><i class="current"></i>电流 I</span>
+          <span><i class="field"></i>磁场 B</span>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="./app-v2.1.js?v=2.1"></script>
+  </body>
+</html>

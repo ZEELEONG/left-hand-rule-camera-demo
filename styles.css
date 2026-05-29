@@ -1,0 +1,281 @@
+:root {
+  color-scheme: dark;
+  font-family:
+    Inter, "Segoe UI", "Microsoft YaHei", system-ui, -apple-system, sans-serif;
+  background: #101312;
+  color: #f5f1e8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 18% 20%, rgba(42, 122, 147, 0.24), transparent 32%),
+    linear-gradient(135deg, #101312 0%, #18201d 48%, #121716 100%);
+  overflow: hidden;
+}
+
+button {
+  font: inherit;
+}
+
+.stage {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.camera-shell {
+  position: relative;
+  width: min(1180px, 100%);
+  height: min(720px, calc(100vh - 40px));
+  min-height: 540px;
+  overflow: hidden;
+  border: 1px solid rgba(245, 241, 232, 0.18);
+  border-radius: 8px;
+  background: #060807;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.46);
+}
+
+#camera,
+#threeOverlay,
+#overlay {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#camera {
+  object-fit: cover;
+}
+
+.camera-shell.mirrored #camera {
+  transform: scaleX(-1);
+}
+
+#overlay {
+  z-index: 2;
+  pointer-events: none;
+}
+
+#threeOverlay {
+  z-index: 1;
+  pointer-events: none;
+}
+
+.topbar,
+.status-panel,
+.legend {
+  position: absolute;
+  z-index: 3;
+}
+
+.topbar {
+  top: 18px;
+  left: 18px;
+  right: 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.kicker {
+  margin: 0 0 5px;
+  color: #94d6d3;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  font-size: clamp(24px, 3vw, 42px);
+  line-height: 1;
+  letter-spacing: 0;
+  text-shadow: 0 3px 22px rgba(0, 0, 0, 0.55);
+}
+
+#cameraButton,
+.secondary-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid rgba(245, 241, 232, 0.25);
+  border-radius: 8px;
+  background: rgba(245, 241, 232, 0.92);
+  color: #111513;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.22);
+}
+
+#cameraButton:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
+.controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.secondary-button {
+  background: rgba(12, 18, 17, 0.74);
+  color: #f5f1e8;
+}
+
+.secondary-button.active {
+  border-color: rgba(148, 214, 211, 0.66);
+}
+
+.button-icon {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #1b5f74;
+  color: #fff;
+  font-size: 11px;
+}
+
+.status-panel {
+  left: 18px;
+  bottom: 18px;
+  width: min(330px, calc(100% - 36px));
+  padding: 14px;
+  border: 1px solid rgba(245, 241, 232, 0.17);
+  border-radius: 8px;
+  background: rgba(12, 18, 17, 0.74);
+  backdrop-filter: blur(14px);
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+  margin-bottom: 10px;
+  font-weight: 800;
+}
+
+.dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #c75548;
+  box-shadow: 0 0 0 5px rgba(199, 85, 72, 0.18);
+}
+
+.dot.on {
+  background: #56d68a;
+  box-shadow: 0 0 0 5px rgba(86, 214, 138, 0.18);
+}
+
+.readout {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  align-items: center;
+  min-height: 30px;
+  color: rgba(245, 241, 232, 0.7);
+  font-size: 14px;
+}
+
+.readout strong {
+  color: #f5f1e8;
+  font-size: 16px;
+}
+
+.legend {
+  right: 18px;
+  bottom: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  max-width: calc(100% - 380px);
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: rgba(12, 18, 17, 0.7);
+  border: 1px solid rgba(245, 241, 232, 0.14);
+  color: rgba(245, 241, 232, 0.85);
+  font-weight: 800;
+}
+
+.legend i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.force {
+  background: #ffce5c;
+}
+
+.current {
+  background: #52c7e8;
+}
+
+.field {
+  background: #f06a77;
+}
+
+@media (max-width: 760px) {
+  body {
+    overflow: auto;
+  }
+
+  .stage {
+    padding: 10px;
+  }
+
+  .camera-shell {
+    height: calc(100vh - 20px);
+    min-height: 620px;
+  }
+
+  .topbar {
+    flex-direction: column;
+  }
+
+  #cameraButton {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .controls {
+    width: 100%;
+  }
+
+  .controls button {
+    flex: 1 1 180px;
+    justify-content: center;
+  }
+
+  .legend {
+    left: 18px;
+    right: 18px;
+    bottom: 170px;
+    max-width: none;
+    justify-content: flex-start;
+  }
+}

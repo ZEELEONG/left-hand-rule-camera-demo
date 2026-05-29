@@ -1,0 +1,18 @@
+# Build/package artifacts
+*.zip
+_package-*/
+
+# Download caches used while preparing the offline vendor bundle
+vendor/downloads/
+
+# Historical scratch copies kept locally but not needed for web hosting
+app-v0.*.js
+app-v1.*.js
+app-v2.0.js
+app.js
+left-hand-rule-camera-demo-windows-v2.0/
+README-使用说明.txt
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
