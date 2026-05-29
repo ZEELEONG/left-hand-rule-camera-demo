@@ -3,7 +3,13 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>左手定律摄像头演示 v2.2</title>
+    <title>左手定律摄像头演示 v2.3</title>
+    <link rel="modulepreload" href="./app-v2.3.js?v=2.3" />
+    <link rel="modulepreload" href="./vendor/three/three.module.js" />
+    <link rel="modulepreload" href="./vendor/mediapipe/vision_bundle.mjs" />
+    <link rel="preload" href="./vendor/mediapipe/wasm/vision_wasm_internal.js" as="script" />
+    <link rel="preload" href="./vendor/mediapipe/wasm/vision_wasm_internal.wasm" as="fetch" type="application/wasm" crossorigin />
+    <link rel="preload" href="./vendor/models/hand_landmarker.task" as="fetch" crossorigin />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -14,7 +20,7 @@
 
         <div class="topbar">
           <div>
-            <p class="kicker">Physics Camera Lab · v2.2</p>
+            <p class="kicker">Physics Camera Lab · v2.3</p>
             <h1>左手定律实时演示</h1>
           </div>
           <div class="controls">
@@ -56,6 +62,6 @@
       </section>
     </main>
 
-    <script type="module" src="./app-v2.2.js?v=2.2"></script>
+    <script type="module" src="./app-v2.3.js?v=2.3"></script>
   </body>
 </html>

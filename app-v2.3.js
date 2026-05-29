@@ -57,6 +57,10 @@ const THREE_SOURCES = [
   "./vendor/three/three.module.js",
 ];
 
+const MODULE_IMPORT_TIMEOUT = 90000;
+const WASM_INIT_TIMEOUT = 90000;
+const MODEL_INIT_TIMEOUT = 120000;
+
 button.addEventListener("click", start);
 mirrorButton.addEventListener("click", toggleMirror);
 window.addEventListener("resize", resizeCanvas);
@@ -80,7 +84,7 @@ function applyMirrorState() {
 async function start() {
   button.disabled = true;
   applyMirrorState();
-  setStatus("正在启动摄像头和手部识别模型", false);
+  setStatus("正在启动摄像头和手部识别模型，微信首次加载可能需要 30-90 秒", false);
 
   try {
     await setupCamera();
@@ -123,11 +127,11 @@ async function setupHandDetector() {
   const failures = [];
   for (const source of MEDIAPIPE_SOURCES) {
     try {
-      setStatus(`识别模型加载中：${source.name}（手机兼容模式）`, false);
-      const vision = await importWithTimeout(source.module, 12000);
+      setStatus(`识别模型加载中：${source.name}（微信/手机兼容模式，首次较慢）`, false);
+      const vision = await importWithTimeout(source.module, MODULE_IMPORT_TIMEOUT);
       const fileset = await withTimeout(
         vision.FilesetResolver.forVisionTasks(source.wasm),
-        16000,
+        WASM_INIT_TIMEOUT,
         "wasm 初始化超时"
       );
       state.detector = await withTimeout(
@@ -142,7 +146,7 @@ async function setupHandDetector() {
           minHandPresenceConfidence: 0.55,
           minTrackingConfidence: 0.5,
         }),
-        26000,
+        MODEL_INIT_TIMEOUT,
         "手部识别模型初始化超时"
       );
       state.modelReady = true;
@@ -153,7 +157,7 @@ async function setupHandDetector() {
     }
   }
 
-  throw new Error(`手部识别模型加载失败，请刷新页面后重试，或换用 Chrome/Safari 最新版。${failures.join(" | ")}`);
+  throw new Error(`手部识别模型加载失败。微信首次加载较慢，请关闭页面重新打开后再试一次；若仍失败，可换 Safari/Chrome。${failures.join(" | ")}`);
 }
 
 async function loadMediaPipeVision() {
@@ -162,7 +166,7 @@ async function loadMediaPipeVision() {
   for (const source of MEDIAPIPE_SOURCES) {
     try {
       setStatus(`正在连接识别库：${source.name}`, false);
-      const vision = await importWithTimeout(source.module, 12000);
+      const vision = await importWithTimeout(source.module, MODULE_IMPORT_TIMEOUT);
       if (!vision.FilesetResolver || !vision.HandLandmarker) {
         throw new Error("识别库内容不完整");
       }
@@ -240,7 +244,7 @@ async function loadThree() {
   const failures = [];
   for (const url of THREE_SOURCES) {
     try {
-      return await importWithTimeout(url, 12000);
+      return await importWithTimeout(url, MODULE_IMPORT_TIMEOUT);
     } catch (error) {
       failures.push(`${url}: ${error.message || error}`);
     }
