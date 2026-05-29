@@ -40,6 +40,7 @@ const state = {
   hand: null,
   gestureScore: 0,
   modelReady: false,
+  resultCount: 0,
   phase: 0,
   mirrored: false,
 };
@@ -135,10 +136,12 @@ async function setupHandDetector() {
       modelComplexity: 0,
       useCpuInference: true,
       selfieMode: state.mirrored,
-      minDetectionConfidence: 0.55,
-      minTrackingConfidence: 0.5,
+      minDetectionConfidence: 0.35,
+      minTrackingConfidence: 0.35,
     });
     hands.onResults((result) => {
+      const landmarksList = result?.multiHandLandmarks || [];
+      state.resultCount = landmarksList.length;
       state.hand = pickLeftHand(result);
       state.gestureScore = state.hand ? scoreOpenPalmRule(state.hand) : 0;
       state.detectorBusy = false;
@@ -262,7 +265,6 @@ function loop(now) {
       "单帧识别超时"
     ).catch((error) => {
       console.warn("MediaPipe Hands frame failed", error);
-    }).finally(() => {
       state.detectorBusy = false;
     });
   }
@@ -276,8 +278,6 @@ function pickLeftHand(result) {
   if (!landmarksList?.length) return null;
 
   const handedness = result.handednesses || result.handedness || result.multiHandedness || [];
-  const targetLabel = state.mirrored ? "Right" : "Left";
-  let best = null;
   let fallback = null;
   for (let i = 0; i < landmarksList.length; i += 1) {
     const handed = Array.isArray(handedness[i]) ? handedness[i][0] : handedness[i];
@@ -288,11 +288,8 @@ function pickLeftHand(result) {
     if (!fallback || score > fallback.score) {
       fallback = hand;
     }
-    if (label === targetLabel && (!best || score > best.score)) {
-      best = hand;
-    }
   }
-  return best || fallback;
+  return fallback;
 }
 
 function scoreOpenPalmRule(hand) {
@@ -358,7 +355,7 @@ function draw(now) {
 
   if (!state.hand) {
     setThreeVisible(false);
-    setStatus(state.modelReady ? "未检测到左手" : "正在加载识别模型", false);
+    setStatus(state.modelReady ? `识别运行中，暂未检测到手（最近结果：${state.resultCount}）` : "正在加载识别模型", false);
     drawGuide(width, height, now);
     renderThree();
     return;
@@ -369,7 +366,7 @@ function draw(now) {
 
   if (state.gestureScore < 0.72) {
     setThreeVisible(false);
-    setStatus("调整为左手张开：四指并拢伸直，拇指自然张开", false);
+    setStatus(`已检测到手，调整为张开姿态（手势分数：${state.gestureScore.toFixed(2)}）`, false);
     drawPromptRing(points[0], now);
     renderThree();
     return;
