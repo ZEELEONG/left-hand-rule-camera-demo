@@ -37,6 +37,9 @@ const state = {
   three: null,
   running: false,
   lastVideoTime: -1,
+  lastDetectAt: 0,
+  sentFrames: 0,
+  resultFrames: 0,
   hand: null,
   gestureScore: 0,
   modelReady: false,
@@ -54,6 +57,7 @@ const THREE_SOURCES = [
 
 const MODULE_IMPORT_TIMEOUT = 90000;
 const HANDS_SEND_TIMEOUT = 20000;
+const DETECT_INTERVAL_MS = 90;
 
 button.addEventListener("click", start);
 mirrorButton.addEventListener("click", toggleMirror);
@@ -141,6 +145,7 @@ async function setupHandDetector() {
     });
     hands.onResults((result) => {
       const landmarksList = result?.multiHandLandmarks || [];
+      state.resultFrames += 1;
       state.resultCount = landmarksList.length;
       state.hand = pickLeftHand(result);
       state.gestureScore = state.hand ? scoreOpenPalmRule(state.hand) : 0;
@@ -256,8 +261,10 @@ function resizeThree() {
 function loop(now) {
   if (!state.running) return;
 
-  if (video.currentTime !== state.lastVideoTime && state.detector && !state.detectorBusy) {
+  if (shouldSendFrame(now)) {
     state.lastVideoTime = video.currentTime;
+    state.lastDetectAt = now;
+    state.sentFrames += 1;
     state.detectorBusy = true;
     withTimeout(
       state.detector.send({ image: video }),
@@ -271,6 +278,15 @@ function loop(now) {
 
   draw(now);
   requestAnimationFrame(loop);
+}
+
+function shouldSendFrame(now) {
+  return state.detector &&
+    !state.detectorBusy &&
+    video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA &&
+    video.videoWidth > 0 &&
+    video.videoHeight > 0 &&
+    now - state.lastDetectAt >= DETECT_INTERVAL_MS;
 }
 
 function pickLeftHand(result) {
@@ -355,7 +371,9 @@ function draw(now) {
 
   if (!state.hand) {
     setThreeVisible(false);
-    setStatus(state.modelReady ? `识别运行中，暂未检测到手（最近结果：${state.resultCount}）` : "正在加载识别模型", false);
+    setStatus(state.modelReady
+      ? `识别运行中，暂未检测到手（结果：${state.resultCount}，发送/回调：${state.sentFrames}/${state.resultFrames}）`
+      : "正在加载识别模型", false);
     drawGuide(width, height, now);
     renderThree();
     return;
