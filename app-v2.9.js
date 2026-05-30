@@ -39,12 +39,9 @@ const state = {
   running: false,
   lastVideoTime: -1,
   lastDetectAt: 0,
-  sentFrames: 0,
-  resultFrames: 0,
   hand: null,
   gestureScore: 0,
   modelReady: false,
-  resultCount: 0,
   phase: 0,
   mirrored: false,
 };
@@ -148,8 +145,6 @@ async function setupHandDetector() {
     hands.onResults((result) => {
       const landmarksList = result?.multiHandLandmarks || [];
       state.firstResultSeen = true;
-      state.resultFrames += 1;
-      state.resultCount = landmarksList.length;
       state.hand = pickLeftHand(result);
       state.gestureScore = state.hand ? scoreOpenPalmRule(state.hand) : 0;
       state.detectorBusy = false;
@@ -267,7 +262,6 @@ function loop(now) {
   if (shouldSendFrame(now)) {
     state.lastVideoTime = video.currentTime;
     state.lastDetectAt = now;
-    state.sentFrames += 1;
     state.detectorBusy = true;
     withTimeout(
       state.detector.send({ image: video }),
@@ -374,9 +368,7 @@ function draw(now) {
 
   if (!state.hand) {
     setThreeVisible(false);
-    setStatus(state.modelReady
-      ? `识别运行中，暂未检测到手（结果：${state.resultCount}，发送/回调：${state.sentFrames}/${state.resultFrames}，首次初始化请稍等）`
-      : "正在加载识别模型", false);
+    setStatus(state.modelReady ? "未检测到手" : "正在加载识别模型", false);
     drawGuide(width, height, now);
     renderThree();
     return;
@@ -387,7 +379,7 @@ function draw(now) {
 
   if (state.gestureScore < 0.72) {
     setThreeVisible(false);
-    setStatus(`已检测到手，调整为张开姿态（手势分数：${state.gestureScore.toFixed(2)}）`, false);
+    setStatus("调整为张开姿态：四指并拢伸直，拇指自然张开", false);
     drawPromptRing(points[0], now);
     renderThree();
     return;
@@ -439,19 +431,21 @@ function drawPhysicsOverlay(points, now) {
   const arrowLength = handScale * worldScale;
 
   const iUnit = normalize3(sub3(fingerTips3, fingerBase3));
-  const thumbVec = sub3(thumbTip3, palm3);
-  const fUnit = normalize3(rejectAlongVec3(thumbVec, iUnit));
-  const bUnit = normalize3(crossVec3(iUnit, fUnit));
   const mainArrowLength = arrowLength * 1.5;
   const iLabelOffset = mainArrowLength * 0.2;
   const fLabelOffset = mainArrowLength * 0.4;
   const bLength = arrowLength * 0.84;
   const bLabelOffset = arrowLength * 0.22;
-  const gridI = scaleVec3(iUnit, arrowLength * 0.4);
-  const gridF = scaleVec3(fUnit, arrowLength * 0.44);
 
   const iStart = fingerBase3;
   const iEnd = add3(fingerBase3, scaleVec3(iUnit, mainArrowLength * 0.98));
+  const thumbFromCurrentAxis = sub3(thumbTip3, iStart);
+  const thumbProjectedVector = rejectAlongVec3(thumbFromCurrentAxis, iUnit);
+  const fUnit = normalize3(thumbProjectedVector);
+  const rawBUnit = normalize3(crossVec3(iUnit, fUnit));
+  const bUnit = state.mirrored ? scaleVec3(rawBUnit, -1) : rawBUnit;
+  const gridI = scaleVec3(iUnit, arrowLength * 0.4);
+  const gridF = scaleVec3(fUnit, arrowLength * 0.44);
   const fStart = iStart;
   const fEnd = add3(fStart, scaleVec3(fUnit, mainArrowLength * 0.9));
 
