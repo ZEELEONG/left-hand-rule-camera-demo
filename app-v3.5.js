@@ -290,8 +290,8 @@ function pickLeftHand(result) {
   if (!landmarksList?.length) return { hand: null, issue: "" };
 
   const handedness = result.handednesses || result.handedness || result.multiHandedness || [];
-  let bestLeft = null;
-  let bestRight = null;
+  let bestHand = null;
+  let bestOpenScore = -Infinity;
   for (let i = 0; i < landmarksList.length; i += 1) {
     const handed = Array.isArray(handedness[i]) ? handedness[i][0] : handedness[i];
     const label = handed?.categoryName || handed?.label;
@@ -299,16 +299,18 @@ function pickLeftHand(result) {
     const world = result.worldLandmarks?.[i] || result.multiHandWorldLandmarks?.[i];
     const visualScore = visualLeftHandScore(landmarksList[i]);
     const hand = { landmarks: landmarksList[i], world, label, score, visualScore };
-    if (visualScore < 0.08) {
-      if (!bestLeft || visualScore < bestLeft.visualScore) bestLeft = hand;
-    } else if (!bestRight || visualScore > bestRight.visualScore) {
-      bestRight = hand;
+    const openScore = scoreOpenPalmRule(hand);
+    if (openScore > bestOpenScore) {
+      bestOpenScore = openScore;
+      bestHand = hand;
     }
   }
 
-  if (bestLeft) return { hand: bestLeft, issue: "" };
-  if (bestRight) return { hand: null, issue: "识别到右手，请抬起左手" };
-  return { hand: null, issue: "请抬起左手" };
+  if (!bestHand) return { hand: null, issue: "请抬起左手" };
+  return {
+    hand: bestHand,
+    issue: isVisualLeftHand(bestHand) ? "" : "识别到右手，请抬起左手",
+  };
 }
 
 function visualLeftHandScore(points) {
@@ -317,6 +319,10 @@ function visualLeftHandScore(points) {
   const fingerCenterX = (x(5) + x(9) + x(13) + x(17)) / 4;
   const palmWidth = Math.max(Math.abs(x(17) - x(5)), 0.04);
   return (thumbX - fingerCenterX) / palmWidth;
+}
+
+function isVisualLeftHand(hand) {
+  return hand.visualScore < 0.08;
 }
 
 function scoreOpenPalmRule(hand) {
@@ -382,7 +388,7 @@ function draw(now) {
 
   if (!state.hand) {
     setThreeVisible(false);
-    setStatus(state.modelReady ? state.handIssue || "未检测到左手" : "正在加载识别模型", false);
+    setStatus(state.modelReady ? state.handIssue || "未检测到手" : "正在加载识别模型", false);
     drawGuide(width, height, now);
     renderThree();
     return;
@@ -399,7 +405,7 @@ function draw(now) {
     return;
   }
 
-  setStatus("已锁定左手定律张掌姿态", true);
+  setStatus(state.handIssue || "已锁定左手定律张掌姿态", true);
   drawPhysicsOverlay(points, now);
   renderThree();
 }
