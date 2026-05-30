@@ -424,13 +424,20 @@ function drawPhysicsOverlay(points, now) {
   const thumbTip = points[4];
   const handScale = clamp(distance(points[0], points[9]) * 1.45, 76, 170);
   const palm3 = toWorldPoint(palm);
+  const wrist3 = toWorldPoint(points[0]);
+  const indexBase3 = toWorldPoint(points[5]);
+  const pinkyBase3 = toWorldPoint(points[17]);
   const fingerBase3 = toWorldPoint(fingerBase);
   const fingerTips3 = toWorldPoint(fingerTips);
   const thumbTip3 = toWorldPoint(thumbTip);
   const worldScale = worldUnitsPerPixel();
   const arrowLength = handScale * worldScale;
 
-  const iUnit = normalize3(sub3(fingerTips3, fingerBase3));
+  const palmAcross = sub3(pinkyBase3, indexBase3);
+  const palmUp = sub3(fingerBase3, wrist3);
+  const palmNormal = normalize3(crossVec3(palmAcross, palmUp));
+  const rawFingerDirection = sub3(fingerTips3, fingerBase3);
+  const iUnit = normalize3(rejectAlongVec3(rawFingerDirection, palmNormal));
   const mainArrowLength = arrowLength * 1.5;
   const iLabelOffset = mainArrowLength * 0.2;
   const fLabelOffset = mainArrowLength * 0.4;
@@ -439,9 +446,12 @@ function drawPhysicsOverlay(points, now) {
 
   const iStart = fingerBase3;
   const iEnd = add3(fingerBase3, scaleVec3(iUnit, mainArrowLength * 0.98));
-  const thumbFromCurrentAxis = sub3(thumbTip3, iStart);
-  const thumbProjectedVector = rejectAlongVec3(thumbFromCurrentAxis, iUnit);
-  const fUnit = normalize3(thumbProjectedVector);
+  const thumbInPalmPlane = rejectAlongVec3(sub3(thumbTip3, iStart), palmNormal);
+  const rotatedA = normalize3(crossVec3(palmNormal, iUnit));
+  const rotatedB = scaleVec3(rotatedA, -1);
+  const fUnit = dot3(thumbInPalmPlane, rotatedA) >= dot3(thumbInPalmPlane, rotatedB)
+    ? rotatedA
+    : rotatedB;
   const rawBUnit = normalize3(crossVec3(iUnit, fUnit));
   const bUnit = state.mirrored ? scaleVec3(rawBUnit, -1) : rawBUnit;
   const gridI = scaleVec3(iUnit, arrowLength * 0.4);
