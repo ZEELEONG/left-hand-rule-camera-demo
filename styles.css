@@ -55,9 +55,7 @@ button {
   object-fit: cover;
 }
 
-.camera-shell.mirrored #camera,
-.camera-shell.mirrored #threeOverlay,
-.camera-shell.mirrored #overlay {
+.camera-shell.mirrored #camera {
   transform: scaleX(-1);
 }
 

@@ -40,6 +40,7 @@ const state = {
   lastVideoTime: -1,
   lastDetectAt: 0,
   hand: null,
+  handIssue: "",
   gestureScore: 0,
   modelReady: false,
   phase: 0,
@@ -141,7 +142,9 @@ async function setupHandDetector() {
     hands.onResults((result) => {
       const landmarksList = result?.multiHandLandmarks || [];
       state.firstResultSeen = true;
-      state.hand = pickLeftHand(result);
+      const picked = pickLeftHand(result);
+      state.hand = picked.hand;
+      state.handIssue = picked.issue;
       state.gestureScore = state.hand ? scoreOpenPalmRule(state.hand) : 0;
       state.detectorBusy = false;
     });
@@ -284,21 +287,38 @@ function shouldSendFrame(now) {
 
 function pickLeftHand(result) {
   const landmarksList = result?.landmarks || result?.multiHandLandmarks;
-  if (!landmarksList?.length) return null;
+  if (!landmarksList?.length) return { hand: null, issue: "" };
 
   const handedness = result.handednesses || result.handedness || result.multiHandedness || [];
-  let fallback = null;
+  let bestUnknown = null;
+  let bestRight = null;
   for (let i = 0; i < landmarksList.length; i += 1) {
     const handed = Array.isArray(handedness[i]) ? handedness[i][0] : handedness[i];
     const label = handed?.categoryName || handed?.label;
     const score = handed?.score ?? 0;
     const world = result.worldLandmarks?.[i] || result.multiHandWorldLandmarks?.[i];
     const hand = { landmarks: landmarksList[i], world, label, score };
-    if (!fallback || score > fallback.score) {
-      fallback = hand;
+    const side = String(label || "").toLowerCase();
+    if (side === "left") {
+      return { hand, issue: "" };
+    }
+    if (side === "right") {
+      if (!bestRight || score > bestRight.score) bestRight = hand;
+      continue;
+    }
+    if (!bestUnknown || score > bestUnknown.score) {
+      bestUnknown = hand;
     }
   }
-  return fallback;
+
+  if (bestRight && !bestUnknown) {
+    return { hand: null, issue: "识别到右手，请抬起左手" };
+  }
+
+  return {
+    hand: bestUnknown,
+    issue: bestUnknown ? "" : "请抬起左手",
+  };
 }
 
 function scoreOpenPalmRule(hand) {
@@ -364,7 +384,7 @@ function draw(now) {
 
   if (!state.hand) {
     setThreeVisible(false);
-    setStatus(state.modelReady ? "未检测到手" : "正在加载识别模型", false);
+    setStatus(state.modelReady ? state.handIssue || "未检测到左手" : "正在加载识别模型", false);
     drawGuide(width, height, now);
     renderThree();
     return;
@@ -386,8 +406,9 @@ function draw(now) {
   renderThree();
 }
 function toCanvasPoint(point, width, height) {
+  const x = state.mirrored ? 1 - point.x : point.x;
   return {
-    x: point.x * width,
+    x: x * width,
     y: point.y * height,
     z: (point.z || 0) * width,
   };
