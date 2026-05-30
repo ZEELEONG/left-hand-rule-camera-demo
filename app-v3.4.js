@@ -299,9 +299,9 @@ function pickLeftHand(result) {
     const world = result.worldLandmarks?.[i] || result.multiHandWorldLandmarks?.[i];
     const visualScore = visualLeftHandScore(landmarksList[i]);
     const hand = { landmarks: landmarksList[i], world, label, score, visualScore };
-    if (visualScore > -0.08) {
-      if (!bestLeft || visualScore > bestLeft.visualScore) bestLeft = hand;
-    } else if (!bestRight || visualScore < bestRight.visualScore) {
+    if (visualScore < 0.08) {
+      if (!bestLeft || visualScore < bestLeft.visualScore) bestLeft = hand;
+    } else if (!bestRight || visualScore > bestRight.visualScore) {
       bestRight = hand;
     }
   }
