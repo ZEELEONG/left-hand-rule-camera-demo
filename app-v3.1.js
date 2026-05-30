@@ -66,14 +66,10 @@ applyMirrorState();
 function toggleMirror() {
   state.mirrored = !state.mirrored;
   applyMirrorState();
-  if (state.detector?.setOptions) {
-    state.detector.setOptions({ selfieMode: state.mirrored });
-  }
 }
 
 function applyMirrorState() {
   shell.classList.toggle("mirrored", state.mirrored);
-  video.style.transform = state.mirrored ? "scaleX(-1)" : "scaleX(1)";
   mirrorButton.classList.toggle("active", state.mirrored);
   mirrorButton.setAttribute("aria-pressed", String(state.mirrored));
   mirrorButton.querySelector("span:last-child").textContent = state.mirrored
@@ -138,7 +134,7 @@ async function setupHandDetector() {
       maxNumHands: 2,
       modelComplexity: 0,
       useCpuInference: true,
-      selfieMode: state.mirrored,
+      selfieMode: false,
       minDetectionConfidence: 0.35,
       minTrackingConfidence: 0.35,
     });
@@ -391,7 +387,7 @@ function draw(now) {
 }
 function toCanvasPoint(point, width, height) {
   return {
-    x: (state.mirrored ? 1 - point.x : point.x) * width,
+    x: point.x * width,
     y: point.y * height,
     z: (point.z || 0) * width,
   };
@@ -452,8 +448,7 @@ function drawPhysicsOverlay(points, now) {
   const fUnit = dot3(thumbInPalmPlane, rotatedA) >= dot3(thumbInPalmPlane, rotatedB)
     ? rotatedA
     : rotatedB;
-  const rawBUnit = normalize3(crossVec3(iUnit, fUnit));
-  const bUnit = state.mirrored ? scaleVec3(rawBUnit, -1) : rawBUnit;
+  const bUnit = normalize3(crossVec3(iUnit, fUnit));
   const gridI = scaleVec3(iUnit, arrowLength * 0.4);
   const gridF = scaleVec3(fUnit, arrowLength * 0.44);
   const fStart = iStart;
