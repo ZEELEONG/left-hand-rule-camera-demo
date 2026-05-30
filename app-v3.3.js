@@ -290,35 +290,33 @@ function pickLeftHand(result) {
   if (!landmarksList?.length) return { hand: null, issue: "" };
 
   const handedness = result.handednesses || result.handedness || result.multiHandedness || [];
-  let bestUnknown = null;
+  let bestLeft = null;
   let bestRight = null;
   for (let i = 0; i < landmarksList.length; i += 1) {
     const handed = Array.isArray(handedness[i]) ? handedness[i][0] : handedness[i];
     const label = handed?.categoryName || handed?.label;
     const score = handed?.score ?? 0;
     const world = result.worldLandmarks?.[i] || result.multiHandWorldLandmarks?.[i];
-    const hand = { landmarks: landmarksList[i], world, label, score };
-    const side = String(label || "").toLowerCase();
-    if (side === "left") {
-      return { hand, issue: "" };
-    }
-    if (side === "right") {
-      if (!bestRight || score > bestRight.score) bestRight = hand;
-      continue;
-    }
-    if (!bestUnknown || score > bestUnknown.score) {
-      bestUnknown = hand;
+    const visualScore = visualLeftHandScore(landmarksList[i]);
+    const hand = { landmarks: landmarksList[i], world, label, score, visualScore };
+    if (visualScore > -0.08) {
+      if (!bestLeft || visualScore > bestLeft.visualScore) bestLeft = hand;
+    } else if (!bestRight || visualScore < bestRight.visualScore) {
+      bestRight = hand;
     }
   }
 
-  if (bestRight && !bestUnknown) {
-    return { hand: null, issue: "识别到右手，请抬起左手" };
-  }
+  if (bestLeft) return { hand: bestLeft, issue: "" };
+  if (bestRight) return { hand: null, issue: "识别到右手，请抬起左手" };
+  return { hand: null, issue: "请抬起左手" };
+}
 
-  return {
-    hand: bestUnknown,
-    issue: bestUnknown ? "" : "请抬起左手",
-  };
+function visualLeftHandScore(points) {
+  const x = (index) => state.mirrored ? 1 - points[index].x : points[index].x;
+  const thumbX = (x(2) + x(3) + x(4)) / 3;
+  const fingerCenterX = (x(5) + x(9) + x(13) + x(17)) / 4;
+  const palmWidth = Math.max(Math.abs(x(17) - x(5)), 0.04);
+  return (thumbX - fingerCenterX) / palmWidth;
 }
 
 function scoreOpenPalmRule(hand) {
